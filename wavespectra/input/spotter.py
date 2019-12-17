@@ -47,7 +47,7 @@ def read_spotter2d(filename):
 
 class Spotter:
     def __init__(self, filename_or_fileglob, toff=0):
-        """Read wave spectra file from TRIAXYS buoy.
+        """Read Spectra from spotter JSON file.
 
         Args:
             - filename_or_fileglob (str, list): filename or fileglob

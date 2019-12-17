@@ -30,6 +30,20 @@ def read_spotter(filename):
     dset = spot.run()
     return dset
 
+def read_spotter2d(filename):
+    """Read Spectra from spotter JSON file.
+
+    Args:
+        - filename (list, str): File name or file glob specifying spotter files to read.
+
+    Returns:
+        - dset (SpecDataset): spectra dataset object read from file.
+
+    """
+    spot = Spotter2d(filename)
+    dset = spot.run()
+    return dset
+
 
 class Spotter:
     def __init__(self, filename_or_fileglob, toff=0):
@@ -182,6 +196,51 @@ class Spotter:
         return filenames
 
 
+
+class Spotter2d(Spotter):
+
+    def _construct_dataset(self):
+        """Construct wavespectra dataset."""
+        from wavespectra.construct.mlm import contruct_mlm
+        self.dset = contruct_mlm(
+            self.frequency[0],
+            self.df[0],
+            self.a1[0],
+            self.b1[0],
+            self.a2[0],
+            self.b2[0],
+            self.varianceDensity[0],
+            self.direction[0],
+            self.directionalSpread[0],
+        )
+
+        # self.dset = xr.DataArray(
+            # data=self.efth, coords=self.coords, dims=self.dims, name=attrs.SPECNAME
+        # ).to_dataset()
+        # self.dset[attrs.LATNAME] = xr.DataArray(
+            # data=self.latitude, coords={"time": self.dset.time}, dims=("time")
+        # )
+        # self.dset[attrs.LONNAME] = xr.DataArray(
+            # data=self.longitude, coords={"time": self.dset.time}, dims=("time")
+        # )
+        # set_spec_attributes(self.dset)
+        return self.dset
+
+    def run(self):
+        """Returns wave spectra dataset from one or more spotter files."""
+        dsets = []
+        for self.filename in self.filenames:
+            self._load_json()
+            self._set_arrays_from_json()
+            dsets.append(self._construct_dataset())
+        # Concatenating datasets from multiple files
+        self.dset = xr.concat(dsets, dim="time")
+        return self.dset
+
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     filename = "../../tests/sample_files/spotter_20180214.json"
-    dset = read_spotter(filename)
+    dset = read_spotter2d(filename)
+    dset.spec.plot()
+    plt.show()
+
